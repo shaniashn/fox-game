@@ -19,7 +19,7 @@ export default function initButtons(handleUserAction){
             // console.log("selectedIcon right", selectedIcon);
             toggleHighlighted(selectedIcon, true);
         } else {
-            console.log("ICONS ", ICONS[selectedIcon]);
+            console.log("ICONS ", ICONS[selectedIcon]);0
             handleUserAction(ICONS[selectedIcon]);
         }
     }

@@ -6,6 +6,6 @@ export const modScene = function modScene(state) {
     document.querySelector('.game').className = `game ${state}`;
 }
 
-export const togglePoopBag = function togglePoopBag(state) {
-    document.querySelector('.poop-bag').classList.toggle('hidden');
+export const togglePoopBag = function togglePoopBag(show) {
+    document.querySelector('.poop-bag').classList.toggle('hidden', !show);
 }

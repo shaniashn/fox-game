@@ -271,4 +271,25 @@ body {
     background-image: url(/Canvas.2b1a6a7b.png);
 }
 
+.num {
+    height: 65px;
+    width: 65px;
+    background-color: rgb(176, 112, 237, 0.5);
+    color: aliceblue;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.numbering {
+    width: 374px;
+    height: 67px;
+    position: absolute;
+    display: flex;
+    justify-content: space-between;
+    top: 610px;
+    left: 194px; 
+    display: none;
+}
+
 /*# sourceMappingURL=/sprites.477892da.css.map */
