@@ -133,6 +133,19 @@ var modScene = exports.modScene = function modScene(state) {
 var togglePoopBag = exports.togglePoopBag = function togglePoopBag(show) {
   document.querySelector('.poop-bag').classList.toggle('hidden', !show);
 };
+},{}],"constant.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TICK_RATE = exports.SCENE = exports.RAIN_CHANCE = exports.NIGHT_LENGTH = exports.ICONS = exports.DAY_LENGTH = void 0;
+var TICK_RATE = exports.TICK_RATE = 3000; // 3000 ms = 3s
+var ICONS = exports.ICONS = ["fish", "poop", "weather"];
+var RAIN_CHANCE = exports.RAIN_CHANCE = .2;
+var SCENE = exports.SCENE = ["day", "rain"];
+var DAY_LENGTH = exports.DAY_LENGTH = 60;
+var NIGHT_LENGTH = exports.NIGHT_LENGTH = 4;
 },{}],"gameState.js":[function(require,module,exports) {
 "use strict";
 
@@ -140,30 +153,55 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.handleUserAction = exports.default = void 0;
-var _ui = require("./ui");
+var _ui = require("./ui.js");
+var _constant = require("./constant.js");
 var gameState = {
   current: 'INIT',
   clock: 1,
   wakeTime: -1,
+  //means not currently working
+  sleepTime: -1,
   tick: function tick() {
     this.clock++;
     console.log("clock", this.clock);
+    if (this.clock === this.wakeTime) {
+      this.wake();
+    }
+    if (this.clock === this.sleepTime) {
+      this.sleep();
+    }
     return this.clock;
   },
   startGame: function startGame() {
-    console.log("hatching");
+    console.log("hatching..");
     this.current = 'HATCHING';
     this.wakeTime = this.clock + 3;
+    console.log("akan awoken pada clock ke-", this.wakeTime);
     (0, _ui.modFox)('egg');
     (0, _ui.modScene)('day');
+  },
+  sleep: function sleep() {
+    this.state = "SLEEP";
+    (0, _ui.modFox)("sleep");
+    (0, _ui.modScene)("night");
+    this.wakeTime = _constant.NIGHT_LENGTH + this.clock;
   },
   wake: function wake() {
     console.log("awoken");
     this.current = 'IDLING';
-    this.wakeTime = -1;
+    this.wakeTime = -1; //back to not currently working
+    (0, _ui.modFox)("idling");
+    var mathRand = Math.random();
+    console.log("mathRand ", mathRand);
+    this.scene = mathRand > _constant.RAIN_CHANCE ? 0 : 1;
+    (0, _ui.modScene)(_constant.SCENE[this.scene]);
+    (0, _ui.modFox)("rain");
+    this.sleepTime = this.clock + _constant.DAY_LENGTH;
   },
   handleUserAction: function handleUserAction(icon) {
-    console.log(this);
+    // console.log(this);
+    console.log("icon ", icon);
+    console.log(this.current);
     if (["SLEEPING", "FEEDING", "HATCHING", "CELEBRATING"].includes(this.current)) {
       //do nothing
       return;
@@ -178,6 +216,7 @@ var gameState = {
         break;
       case "poop":
         this.cleanUpPoop();
+        console.log("poop?");
         break;
       case "fish":
         this.feed();
@@ -188,9 +227,11 @@ var gameState = {
   },
   changeWeather: function changeWeather() {
     console.log("change weather");
+    (0, _ui.modScene)(this.scene);
   },
   cleanUpPoop: function cleanUpPoop() {
     console.log("clean up poop");
+    (0, _ui.modFox)('pooping');
   },
   feed: function feed() {
     console.log("feed");
@@ -199,16 +240,7 @@ var gameState = {
 var handleUserAction = exports.handleUserAction = gameState.handleUserAction.bind(gameState); //With the bind() method, an object can borrow a method from another object.
 // artinya, gameState.handleUserAction() akan selalu binding ke gameState as object.
 var _default = exports.default = gameState;
-},{"./ui":"ui.js"}],"constant.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.TICK_RATE = exports.ICONS = void 0;
-var TICK_RATE = exports.TICK_RATE = 3000; // 3000 ms = 3s
-var ICONS = exports.ICONS = ["fish", "poop", "weather"];
-},{}],"buttons.js":[function(require,module,exports) {
+},{"./ui.js":"ui.js","./constant.js":"constant.js"}],"buttons.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -220,14 +252,15 @@ var toggleHighlighted = function toggleHighlighted(icon, show) {
   return document.querySelector(".".concat(_constant.ICONS[icon], "-icon")).classList.toggle("highlighted", show);
 };
 function initButtons(handleUserAction) {
-  var selectedIcon = 2;
+  var selectedIcon = 0;
+  console.log("handleUserAction inside button ", handleUserAction);
   function buttonClick(_ref) {
     var target = _ref.target;
     //target = event.target
     if (target.classList.contains("left-btn")) {
       toggleHighlighted(selectedIcon, false);
       // console.log("selectedIcon left before", selectedIcon);
-      selectedIcon = (2 + selectedIcon) % _constant.ICONS.length;
+      selectedIcon = (2 + selectedIcon) % _constant.ICONS.length; //bisa juga pakai -1 instead of 2 
       // console.log("selectedIcon left", selectedIcon);
       toggleHighlighted(selectedIcon, true);
     } else if (target.classList.contains("right-btn")) {
@@ -249,6 +282,14 @@ function initButtons(handleUserAction) {
 
 //                      left: 2 -> 1 -> 0 -> 2
 //entering toggleHighlighted  2 -> 1 -> 0 -> 2
+
+// ------
+// if tombolnya ada 4, maka 2 diganti -1
+
+// 0 -> 1 + 0 % 4 = 1
+// 1 -> 1 + 1 % 4 = 2
+// 2 -> 1 + 2 % 4 = 3
+// 3 -> 1 + 3 % 4 = 0
 },{"./constant.js":"constant.js"}],"init.js":[function(require,module,exports) {
 "use strict";
 
@@ -281,11 +322,12 @@ function _init() {
             }
             requestAnimationFrame(nextAnimationFrame);
           };
-          console.log('starting game');
+          console.log('starting game..');
           (0, _buttons.default)(_gameState.handleUserAction);
+          console.log("handleUserAction ", _gameState.handleUserAction);
           nextTimeToTick = Date.now(); //5
           requestAnimationFrame(nextAnimationFrame);
-        case 5:
+        case 6:
         case "end":
           return _context.stop();
       }
@@ -319,7 +361,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55580" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54747" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

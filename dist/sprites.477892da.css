@@ -173,6 +173,7 @@ fox-eating.fox {
     width: 175px;
     height: 217px;
     animation: hatching 4s steps(7);
+
 }
 
 @keyframes hatching {
@@ -267,6 +268,14 @@ fox-eating.fox {
     background-image: url(/NIGHT.1fa3ed43.png);
 }
 
+.game.dead {
+    background-image: url(/DEAD.2fdcc29e.png);
+}
+
+.game.rain {
+    background-image: url(/RAINY.259b0634.png);
+}
+
 body {
     background-image: url(/Canvas.2b1a6a7b.png);
 }
@@ -288,7 +297,7 @@ body {
     display: flex;
     justify-content: space-between;
     top: 610px;
-    left: 194px; 
+    left: 194px;
     display: none;
 }
 
