@@ -139,13 +139,19 @@ var togglePoopBag = exports.togglePoopBag = function togglePoopBag(show) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.TICK_RATE = exports.SCENE = exports.RAIN_CHANCE = exports.NIGHT_LENGTH = exports.ICONS = exports.DAY_LENGTH = void 0;
+exports.getNextHungryTime = exports.getNextDieTime = exports.TICK_RATE = exports.SCENE = exports.RAIN_CHANCE = exports.NIGHT_LENGTH = exports.ICONS = exports.DAY_LENGTH = void 0;
 var TICK_RATE = exports.TICK_RATE = 3000; // 3000 ms = 3s
 var ICONS = exports.ICONS = ["fish", "poop", "weather"];
 var RAIN_CHANCE = exports.RAIN_CHANCE = .2;
 var SCENE = exports.SCENE = ["day", "rain"];
 var DAY_LENGTH = exports.DAY_LENGTH = 60;
 var NIGHT_LENGTH = exports.NIGHT_LENGTH = 4;
+var getNextHungryTime = exports.getNextHungryTime = function getNextHungryTime(clock) {
+  return Math.floor(Math.random() * 3) + 5 + clock;
+};
+var getNextDieTime = exports.getNextDieTime = function getNextDieTime(clock) {
+  return Math.floor(Math.random() * 3) + 3 + clock;
+};
 },{}],"gameState.js":[function(require,module,exports) {
 "use strict";
 
@@ -161,14 +167,19 @@ var gameState = {
   wakeTime: -1,
   //means not currently working
   sleepTime: -1,
+  hungryTime: -1,
+  dieTime: -1,
   tick: function tick() {
     this.clock++;
     console.log("clock", this.clock);
     if (this.clock === this.wakeTime) {
       this.wake();
-    }
-    if (this.clock === this.sleepTime) {
+    } else if (this.clock === this.sleepTime) {
       this.sleep();
+    } else if (this.clock === this.hungryTime) {
+      this.getHungry();
+    } else if (this.clock === this.dieTime) {
+      this.die();
     }
     return this.clock;
   },
@@ -180,8 +191,21 @@ var gameState = {
     (0, _ui.modFox)('egg');
     (0, _ui.modScene)('day');
   },
+  getHungry: function getHungry() {
+    this.current = "HUNGRY";
+    (0, _ui.modFox)("hungry");
+    this.dieTime = (0, _constant.getNextDieTime)(this.clock);
+    console.log("will die on ", this.dieTime);
+    this.hungryTime = -1;
+  },
+  die: function die() {
+    console.log("wow ded");
+    (0, _ui.modFox)("dead");
+    (0, _ui.modScene)("dead");
+    this.current = "DEAD";
+  },
   sleep: function sleep() {
-    this.state = "SLEEP";
+    this.current = "SLEEP";
     (0, _ui.modFox)("sleep");
     (0, _ui.modScene)("night");
     this.wakeTime = _constant.NIGHT_LENGTH + this.clock;
@@ -194,15 +218,22 @@ var gameState = {
     var mathRand = Math.random();
     console.log("mathRand ", mathRand);
     this.scene = mathRand > _constant.RAIN_CHANCE ? 0 : 1;
+    console.log("scene", this.scene);
     (0, _ui.modScene)(_constant.SCENE[this.scene]);
-    (0, _ui.modFox)("rain");
+    if (this.scene == 1) {
+      (0, _ui.modFox)("rain");
+    }
     this.sleepTime = this.clock + _constant.DAY_LENGTH;
+    this.hungryTime = (0, _constant.getNextHungryTime)(this.clock);
+    console.log("will hungry on ", this.hungryTime);
   },
   handleUserAction: function handleUserAction(icon) {
     // console.log(this);
     console.log("icon ", icon);
     console.log(this.current);
-    if (["SLEEPING", "FEEDING", "HATCHING", "CELEBRATING"].includes(this.current)) {
+    if (["SLEEP", "FEEDING", "HATCHING", "CELEBRATING"].includes(this.current)) {
+      console.log("this current ", this.current);
+
       //do nothing
       return;
     }
@@ -235,6 +266,10 @@ var gameState = {
   },
   feed: function feed() {
     console.log("feed");
+    (0, _ui.modFox)("eating");
+    this.current = "FEEDING";
+    this.dieTime = -1;
+    console.log("gjd mati");
   }
 };
 var handleUserAction = exports.handleUserAction = gameState.handleUserAction.bind(gameState); //With the bind() method, an object can borrow a method from another object.
@@ -361,7 +396,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54747" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56490" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
